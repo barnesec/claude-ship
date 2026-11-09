@@ -63,6 +63,8 @@ Then:
 
 To stop a run in progress, press Esc (the gate doesn't fire on interrupts), then `/ship abort`.
 
+While a run is going, Claude Code shows each gate message as "Stop hook error occurred · ctrl+o to see". That label is Claude Code's name for any Stop-hook feedback; it doesn't mean the gate failed. Press ctrl+o to read what the gate told Claude.
+
 ## What a run leaves behind
 
 - **A branch** `ship/<slug>` with one commit per task. Each commit has a `Ship-Task: Tn` trailer, so you can cherry-pick any of them.
