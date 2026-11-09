@@ -1,0 +1,13 @@
+{
+  "name": "claude-ship",
+  "version": "0.1.0",
+  "private": true,
+  "description": "/ship: an autonomous, gated delivery loop for Claude Code, run by your agent team.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  }
+}
