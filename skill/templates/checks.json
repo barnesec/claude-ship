@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "notes": "Fill in during discovery (reference/discovery.md). Required ids: typecheck, lint, build, tests. Each check needs a \"cmd\", or a \"skip\" reason when it genuinely does not apply to this repo.",
+  "checks": []
+}
