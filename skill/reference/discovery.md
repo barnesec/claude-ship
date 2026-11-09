@@ -24,7 +24,7 @@ The run's definition of done: the branch passes typecheck and lint, builds succe
 
 Fields:
 - `id`: required ids are `typecheck`, `lint`, `build` and `tests`. Add more checks with other ids if the repo has them, such as `format` or `test-e2e`.
-- `cmd`: the shell command, run from the repo root (or from `cwd`). Exit code 0 means pass. Commands run with `CI=1`.
+- `cmd`: the shell command, run from the repo root (or from `cwd`). Exit code 0 means pass. Commands run with `CI=1`, in bash: `/bin/sh` on macOS and Linux, and Git Bash on Windows (the same shell as Claude's Bash tool). Only when Git Bash can't be found on Windows do they fall back to cmd.exe, so prefer plain commands that work in both: no `VAR=value` prefixes, single quotes or `/dev/null`.
 - `skip`: instead of `cmd`, a reason of at least 10 characters when a check genuinely doesn't apply, such as `"no build step: library consumed as TypeScript source"`. Skips appear in the PR.
 - `{files}`: replaced with the changed files (since the run's base commit) that match `match`, relative to `cwd`. When no changed file matches, the check passes as "nothing related to test".
 - `fallback`: run instead of the `{files}` form when the changed-file list is too long for one command line.

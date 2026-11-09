@@ -74,6 +74,7 @@ To stop a run in progress, press Esc (the gate doesn't fire on interrupts), then
 - **Limits** live in the run's `state.json` under `limits`. Defaults are in `skill/scripts/lib.mjs` (`DEFAULT_LIMITS`).
 - **Checks** are discovered per repo and written to `checks.json` (format in `skill/reference/discovery.md`). If discovery gets one wrong, Claude fixes it and re-locks. Every re-lock is flagged in the PR, so a weakened check can't slip through quietly.
 - **Role briefs** for engineer, designer, QA and discovery are in `skill/reference/roles.md`.
+- **Shell.** The gate runs checks in `/bin/sh` on macOS and Linux and in Git Bash on Windows, matching Claude's Bash tool, and falls back to cmd.exe when it can't find Git Bash. Set `SHIP_SHELL` to the full path of a bash or cmd.exe to choose.
 
 ## Development
 
