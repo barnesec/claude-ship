@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it } from 'node:test';
@@ -88,7 +89,7 @@ describe('resolveCheck', () => {
 
   it('substitutes matching changed files, quoted', () => {
     const plan = L.resolveCheck(repo, { id: 'tests', cmd: 'jest {files}' }, base, changed);
-    assert.equal(plan.cmd, process.platform === 'win32' ? 'jest "src/new.ts"' : "jest 'src/new.ts'");
+    assert.equal(plan.cmd, L.checkShell().posix ? "jest 'src/new.ts'" : 'jest "src/new.ts"');
   });
 
   it('skips when nothing related changed', () => {
@@ -113,7 +114,34 @@ describe('resolveCheck', () => {
 
   it('makes {files} relative to the check cwd and drops files outside it', () => {
     const plan = L.resolveCheck(repo, { id: 'tests', cmd: 'jest {files}', cwd: 'src', match: '.' }, base, changed);
-    assert.equal(plan.cmd, process.platform === 'win32' ? 'jest "new.ts"' : "jest 'new.ts'");
+    assert.equal(plan.cmd, L.checkShell().posix ? "jest 'new.ts'" : 'jest "new.ts"');
+  });
+});
+
+describe('checkShell', () => {
+  it('quotes for the shell the checks run in', () => {
+    assert.equal(L.quoteArg("it's", true), `'it'\\''s'`);
+    assert.equal(L.quoteArg('C:/My Files/x.ts', false), '"C:/My Files/x.ts"');
+  });
+
+  it('honors SHIP_SHELL', { skip: !fs.existsSync('/bin/bash') && 'needs /bin/bash' }, () => {
+    const repo = makeRepo();
+    const checks = {
+      checks: [
+        { id: 'typecheck', cmd: '[[ "$BASH_VERSION" != "" ]] && echo bash-ok' },
+        { id: 'lint', skip: 'not part of this test' },
+        { id: 'build', skip: 'not part of this test' },
+        { id: 'tests', skip: 'not part of this test' },
+      ],
+    };
+    const r = spawnSync(process.execPath, ['--input-type=module', '-e', `
+      import * as L from ${JSON.stringify(new URL('../skill/scripts/lib.mjs', import.meta.url).href)};
+      const [res] = L.runChecks(${JSON.stringify(repo)}, ${JSON.stringify(checks)}, {});
+      console.log(JSON.stringify({ ok: res.ok, shell: L.checkShell() }));
+    `], { encoding: 'utf8', env: { ...process.env, SHIP_SHELL: '/bin/bash' } });
+    const out = JSON.parse(r.stdout);
+    assert.equal(out.ok, true);
+    assert.deepEqual(out.shell, { shell: '/bin/bash', posix: true });
   });
 });
 

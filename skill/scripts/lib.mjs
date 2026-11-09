@@ -287,8 +287,38 @@ export function checksHash(doc) {
   return sha256(JSON.stringify(doc.checks));
 }
 
-export function quoteArg(s) {
-  if (process.platform === 'win32') return `"${s}"`;
+// The shell checks run in. Claude's Bash tool uses Git Bash on Windows, so the gate
+// does too when it can find it: a check that passes for Claude must mean the same
+// thing to the gate. SHIP_SHELL overrides (a bash or cmd.exe path).
+let shellCache;
+export function checkShell() {
+  if (!shellCache) shellCache = resolveShell();
+  return shellCache;
+}
+
+function resolveShell() {
+  const override = process.env.SHIP_SHELL;
+  if (override) return { shell: override, posix: !/(^|[\\/])cmd(\.exe)?$/i.test(override) };
+  if (process.platform !== 'win32') return { shell: true, posix: true };
+  const candidates = [process.env.CLAUDE_CODE_GIT_BASH_PATH];
+  const where = spawnSync('where', ['git'], { encoding: 'utf8', windowsHide: true });
+  for (const gitExe of (where.stdout || '').split(/\r?\n/).filter(Boolean)) {
+    // git.exe lives in <Git>\cmd, <Git>\bin or <Git>\mingw64\bin; bash.exe in <Git>\bin.
+    let dir = path.dirname(gitExe.trim());
+    for (let up = 0; up < 3; up += 1) {
+      candidates.push(path.join(dir, 'bin', 'bash.exe'));
+      dir = path.dirname(dir);
+    }
+  }
+  for (const base of [process.env.ProgramFiles, process.env['ProgramFiles(x86)'], process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'Programs')]) {
+    if (base) candidates.push(path.join(base, 'Git', 'bin', 'bash.exe'));
+  }
+  const bash = candidates.find((c) => c && !/system32/i.test(c) && fs.existsSync(c));
+  return bash ? { shell: bash, posix: true } : { shell: true, posix: false };
+}
+
+export function quoteArg(s, posix = checkShell().posix) {
+  if (!posix) return `"${s}"`;
   return `'${s.replace(/'/g, `'\\''`)}'`;
 }
 
@@ -323,7 +353,7 @@ export function resolveCheck(root, check, baseSha, changed) {
       .map((f) => toPosix(path.relative(cwdAbs, path.join(root, f))))
       .filter((f) => f && !f.startsWith('..'));
     if (files.length === 0) return { skip: 'no changed files match, so there are no related tests to run' };
-    const joined = files.map(quoteArg).join(' ');
+    const joined = files.map((f) => quoteArg(f)).join(' ');
     if (cmd.length + joined.length > MAX_CMDLINE) {
       if (!check.fallback) {
         return { fail: `${files.length} changed files are too many for one command line and no "fallback" command is set` };
@@ -357,7 +387,7 @@ export function runChecks(root, doc, { baseSha, only, onStart } = {}) {
     const t0 = Date.now();
     const r = spawnSync(plan.cmd, {
       cwd: path.join(root, check.cwd || '.'),
-      shell: true,
+      shell: checkShell().shell,
       encoding: 'utf8',
       timeout: (check.timeoutSec || 900) * 1000,
       maxBuffer: 64 * 1024 * 1024,
