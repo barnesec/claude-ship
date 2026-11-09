@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 export const SKILL_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const SHIP_CMD = `node "${toPosix(path.join(SKILL_DIR, 'scripts', 'ship.mjs'))}"`;
+export const REF_DIR = toPosix(path.join(SKILL_DIR, 'reference'));
 export const FILL_MARKER = '<!-- ship:fill -->';
 export const REQUIRED_CHECKS = ['typecheck', 'lint', 'build', 'tests'];
 export const DEFAULT_MATCH = '\\.(?:[cm]?[jt]sx?)$';
@@ -438,7 +439,7 @@ export function nextAction(run, info) {
   let action;
   switch (info.stage) {
     case 'discover':
-      action = `Discover this repo's checks (reference/discovery.md): write ${rel(root, info.files.checks)} with typecheck, lint, build and tests entries, then run \`${S} lock-checks\`.`;
+      action = `Discover this repo's checks (${REF_DIR}/discovery.md): write ${rel(root, info.files.checks)} with typecheck, lint, build and tests entries, then run \`${S} lock-checks\`.`;
       break;
     case 'plan':
       action = `Plan as PM: fill ${rel(root, info.files.spec)} (summary, acceptance criteria, out of scope, verification) and ${rel(root, info.files.tasks)} (T1..Tn, one commit each), and remove the ${FILL_MARKER} markers.`;
@@ -446,7 +447,7 @@ export function nextAction(run, info) {
     case 'build': {
       const t = open[0];
       const more = open.length - 1;
-      action = `Build ${t.id}${t.title ? ` (${t.title})` : ''}: delegate it to an engineer subagent (reference/roles.md), confirm it landed as one commit with the trailer "Ship-Task: ${t.id}", then tick it in tasks.md.${more ? ` ${more} more open task(s) after this one.` : ' It is the last open task.'}`;
+      action = `Build ${t.id}${t.title ? ` (${t.title})` : ''}: delegate it to an engineer subagent (${REF_DIR}/roles.md), confirm it landed as one commit with the trailer "Ship-Task: ${t.id}", then tick it in tasks.md.${more ? ` ${more} more open task(s) after this one.` : ' It is the last open task.'}`;
       break;
     }
     case 'qa':
