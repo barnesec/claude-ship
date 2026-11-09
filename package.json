@@ -8,6 +8,6 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/lib.test.mjs test/flow.test.mjs test/install.test.mjs"
   }
 }
