@@ -106,7 +106,7 @@ describe('a full run', () => {
 
     const body = fs.readFileSync(path.join(runDir(repo), 'PR.md'), 'utf8');
     assert.match(body, /## Summary\n\nMake greetings friendlier\./);
-    assert.match(body, /\| done \| T1: first change \\\| owner: engineer \| `[0-9a-f]{7,}` \|/);
+    assert.match(body, /\| done \| T1: first change \| `[0-9a-f]{7,}` \|/);
     assert.match(body, /Stop-gate run at `[0-9a-f]{8}`: \*\*PASSED\*\*/);
     assert.match(body, /\*\*pass\*\* at/);
 

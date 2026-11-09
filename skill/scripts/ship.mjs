@@ -353,7 +353,8 @@ function prBody(run, info, blocked) {
   for (const t of info.tasks) {
     const c = commits.filter((x) => x.task === t.id).map((x) => `\`${x.sha}\``).join(' ');
     const mark = t.done ? 'done' : t.dropped ? 'dropped' : 'open';
-    out.push(`| ${mark} | ${t.id}: ${mdCell(t.title)} | ${c || '-'} |`);
+    const summary = t.title.split(/\s+\|\s+/)[0];
+    out.push(`| ${mark} | ${t.id}: ${mdCell(summary)} | ${c || '-'} |`);
   }
   out.push('');
 
