@@ -302,6 +302,14 @@ function tail(text, lines = 60, chars = 3500) {
   return t.trim();
 }
 
+// A per-repo directory outside the working tree for build output, so builds never
+// leave files that lint, test or git status would pick up.
+export function scratchDir(root) {
+  const dir = path.join(os.tmpdir(), 'ship-build', sha256(root).slice(0, 12));
+  fs.mkdirSync(dir, { recursive: true });
+  return toPosix(dir);
+}
+
 // Resolve one check into the command line to run, or a skip/failure without running.
 export function resolveCheck(root, check, baseSha, changed) {
   if (check.skip) return { skip: `skipped: ${check.skip}` };
@@ -327,6 +335,7 @@ export function resolveCheck(root, check, baseSha, changed) {
     }
   }
   if (baseSha) cmd = cmd.split('{base}').join(baseSha);
+  if (cmd.includes('{tmp}')) cmd = cmd.split('{tmp}').join(quoteArg(scratchDir(root)));
   return { cmd, note };
 }
 
